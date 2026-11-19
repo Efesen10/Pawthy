@@ -1,5 +1,5 @@
 ## Description
-What does this PR do?
+What does this PR do and why? (1-3 sentences)
 
 ## Related Issue
 Closes #
@@ -11,7 +11,10 @@ Closes #
 - [ ] chore
 
 ## Checklist
-- [ ] Branch name follows the convention
+- [ ] Branch name follows the convention (`feature/<issue-no>-short-description`)
 - [ ] Commit messages follow the convention
+- [ ] I reviewed my own changes in the "Files changed" tab
 - [ ] Documentation updated if needed
-- [ ] Reviewed by at least one team member
+- [ ] PR has the correct `type:` label and milestone
+
+## Screenshots / Notes
