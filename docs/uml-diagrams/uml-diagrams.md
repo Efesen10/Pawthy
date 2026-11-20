@@ -2,14 +2,14 @@
 
 > **Owner:** Software Architect (Efe) · **Reviewed:** 20 November 2026 · **Status:** PROPOSED DESIGN, not implemented or formally approved.  
 > **Source of proposed behaviors:** Deniz's 69-page *Functional Requirements* SRS supplied 20 Nov 2026 (sections 3.1–3.14). **Contract actually published:** `api/openapi.yaml` v0.6.3 on `develop`.  
-> **Important:** The 69-page SRS repeats section 3.7 (US-07) and has no separate US-08 section. The supplementary **5.2 Software Interfaces** requires Django/MySQL, backend-only database access, **soft deletion and restoration**. The Sprint 1 US-08 read-history behavior is represented *provisionally*, pending PO correction. See [SRS review](../architecture/srs-2026-11-20-review.md).
+> **Important:** The 69-page SRS repeats section 3.7 (US-07) and has no separate US-08 section. The supplementary **5.2 Software Interfaces** requires Django/MySQL, backend-only database access, **soft deletion and restoration**. **FR-08 View Veterinary Clinical Records** has since been supplied in separate team slides (pages 31–32/222, **Must Have**). Owner-only read requirements are now grounded. The 69-page PDF still needs its duplicate section edited and 3.8 inserted. See [SRS review](../architecture/srs-2026-11-20-review.md).
 
 ## 1. Diagram index and model status
 
 | Model | Coverage | Review status |
 |---|---|---|
 | Formal PlantUML | [use-cases.puml](use-cases.puml) | Updated for US-14, owner-only actions and SRS conflicts |
-| Use-case overview | US-01–US-14 identifiers; US-08 source gap | Proposed SRS model, not existing API behavior |
+| Use-case overview | US-01–US-14 including now-confirmed owner-only **FR-08** | Proposed design; SRS PDF still needs editorial repair |
 | Class A | Owner, Pet, diary, clinical, vaccination, reminder, guided-tour state | Target fields; differences from API 0.6.3 below |
 | Class B | Working calendar, manual appointment, in-app notification, theme | Target fields/statuses; contract changes pending |
 | Sequence 1 | Initial Owner ID login and password change | Account identifier mismatch pending API owner |
@@ -17,6 +17,7 @@
 | Sequence 3 | Vaccination record, reminders, read status | API model extension pending |
 | Sequence 4 | Owner weekly availability | Public-vs-owner response mismatch pending |
 | Sequence 5 | Optional four-step US-14 guided tour | New API contract needed, P2 |
+| Sequence 6 | **FR-08 View Veterinary Clinical Records:** owner authorization, newest first, no soft-deleted data, empty-state | API GET exists; deleted-record filtering/UI behavior not yet guaranteed |
 | State machines | Appointment / Vaccination reminder / Guided tour | SRS-target states; not API v0.6.3 enums |
 
 *Notation:* Mermaid diagrams represent **SRS-target logical design**, not already implemented database tables. The existing API fields must **not** be claimed to conform until approved and changed. Dashed arrows indicate derived views or dependency. Owner permissions must be enforced server-side.
@@ -37,8 +38,7 @@ flowchart LR
     U05(["US-05 Own Health Diary CRUD"])
     U06(["US-06 Diary History / Statistics"])
     U07V(["US-07 Manage Clinical Records"])
-    U07O(["US-07 View Own Clinical Records"])
-    U08(["US-08 Read Medical History — Sprint 1 only; SRS missing"])
+    U08(["FR-08 View Own Veterinary Clinical Records (read only)"])
     U09(["US-09 Manage Vaccinations"])
     U10(["US-10 View / Read Vaccination Reminders"])
     U11V(["US-11 Maintain Hours and Exceptions"])
@@ -60,9 +60,7 @@ flowchart LR
   O --- U06
   V --- U06
   V --- U07V
-  O --- U07O
   O --- U08
-  V --- U08
   V --- U09
   O --- U10
   V --- U10
@@ -174,7 +172,7 @@ classDiagram
 - **FR-04.9–04.12/04.19–04.22:** Vet-maintained life stage independent of exact/estimated birth date; required `microchip_status`, conditionally required number; displayed age from recorded date with an approximate marker when estimated. Current API has `estimated_age_months` and lacks explicit birth accuracy, life stage and microchip status — **gap**.
 - **FR-04.13–04.17:** Vet can edit official clinic photo but not owner's private gallery; owner can manage private gallery but not vet's photo. Owner archive is **view-only**, not record deletion. Deceased pets preserve clinical history.
 - **FR-05.4/05.12/05.13, FR-06.4–06.5:** `observed_at` is editable for past events, distinct from immutable `created_at`; future observation rejected; symptom frequency counts **distinct calendar days**, not repeated entries.
-- **FR-07.9/07.16 + supplementary SI-07:** Vet may **soft-delete** clinical records after confirmation and **restore** them; they remain recoverable. Do **not cascade-delete** separately stored diary/vaccinations. `deleted_at`/`deleted_by` are proposed persistence fields, not existing API fields. SRS excludes permanent ordinary deletion of pet profile/history (US-04); Section 5.2 SI-07 confirms that clinical deletion is soft and supports restoration; final restore authorization and audit semantics require API team review.
+- **FR-07.9/07.16 + supplementary SI-07 and FR-08:** Vet may **soft-delete** clinical records after confirmation and **restore** them; they remain recoverable. Do **not cascade-delete** separately stored diary/vaccinations. `deleted_at`/`deleted_by` are proposed persistence fields, not existing API fields. SRS excludes permanent ordinary deletion of pet profile/history (US-04); Section 5.2 SI-07 confirms that clinical deletion is soft and supports restoration; final restore authorization and audit semantics require API team review.
 - **FR-09.15:** Vaccination records are **not deletable by either role**; vet may update. **FR-10.11:** marking a reminder read never means vaccine completed.
 - `GuidedTourStatus` is `NOT_STARTED | COMPLETED | SKIPPED` (proposed wire spelling). It belongs to the **account**, never device-local storage as the authoritative source. Tour replay retains existing state.
 
@@ -475,7 +473,42 @@ sequenceDiagram
 
 **Proposed API** paths above do not yet exist. The 4 steps are **My Pets → Health Diary → Health Records → Vaccinations & Reminders**. `Next/Back/Skip`; partial dimming + tooltip; account-level persistence across devices; only owner; no blocked feature access. Onboarding is **not mandatory for initial Sprint 3 MVP** (SRS scope, P2).
 
-## 12. State Machine C — Guided Tour (Account State)
+## 12. Sequence — FR-08 Owner Viewing Veterinary Clinical Records (Must Have)
+
+Source: separately supplied **FR-08 — View Veterinary Clinical Records**, screenshot slides 31–32/222, **Primary Actor: Pet Owner**. Preconditions: authenticated owner, selected pet belongs to that owner's account.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Owner as Authenticated Pet Owner
+    participant UI as Medical Records View
+    participant API as REST API
+    participant Auth as Ownership / RBAC
+    participant DB as Clinical Record Store
+    Owner->>UI: Choose one of own registered pets; open Medical Records
+    UI->>API: GET /pets/{petId}/medical-records (owner bearer)
+    API->>Auth: Authenticate and check pet.owner_id == current owner
+    alt Not authenticated / pet owned by another account
+        Auth-->>API: Reject access (401 or owner-scoped 404)
+        API-->>UI: No clinical data disclosed
+    else Owner is authorized
+        Auth-->>API: Read permitted
+        API->>DB: Read pet's non-soft-deleted clinical records, newest first
+        DB-->>API: Active veterinarian-managed records (may be empty)
+        API-->>UI: 200 MedicalRecordList sorted reverse chronologically
+        alt Records present
+            UI-->>Owner: Show populated examination, diagnosis, treatment, medication and vet note fields
+            Note over UI,Owner: Omit optional unrecorded fields; no create/edit/delete actions
+        else No visible records
+            UI-->>Owner: Display informative empty-state message
+        end
+    end
+    Note over API,DB: Restored record may reappear after vet restoration; never expose soft-deleted records
+```
+
+**Seven requirements from FR-08:** show records for selected pet; newest-first ordering; display **all populated veterinarian-managed fields** (examination details, diagnoses, treatments, medications and veterinarian notes); omit empty optional values; owner has **no** create/update/delete; hide soft-deleted records unless vet restores; show informative empty state. **AC-01–AC-08** additionally prohibit cross-owner access. `GET /pets/{petId}/medical-records` already declares PET_OWNER and VETERINARIAN roles, pagination and a **“Most recent first”** 200 response in published API v0.6.3. Filtering of soft-deleted records, full populated-field presentation and UI empty-state still require explicit backend/frontend verification. Vet management remains US-07; do not model an owner as a clinical record editor.
+
+## 13. State Machine C — Guided Tour (Account State)
 
 ```mermaid
 stateDiagram-v2
@@ -492,7 +525,7 @@ stateDiagram-v2
 
 **Modeling nuance:** `ActiveTour` and `Replay` are UI-only states; the persisted status is **Not Started, Completed, or Skipped**. The replay arrows intentionally preserve the preexisting persisted state.
 
-## 13. SRS / OpenAPI reconciliation checklist
+## 14. SRS / OpenAPI reconciliation checklist
 
 | Requirement | UML target | v0.6.3 alignment |
 |---|---|---|
@@ -506,15 +539,16 @@ stateDiagram-v2
 | Hard appointment overlap / soft out-of-hours override | Sequence 2 | **Mismatch** |
 | Appointment Scheduled/Completed/Canceled; notifications | Class B; State A; Sequence 2 | **Mismatch** |
 | US-14 onboarding and account persistence | Use Case; Sequence 5; State C | **New P2 feature; contract missing** |
-| US-08 separate requirements text | Provisional Use Case | **SRS editorial correction required** |
+| **FR-08** owner-only clinical history | Use Case, Class A, Sequence 6 | **GET + newest-first already in OpenAPI**; soft-deleted exclusion, optional-field presentation and empty state need verification; 69-page PDF still needs section 3.8 insertion |
 
-## 14. Peer review gate
+## 15. Peer review gate
 
 - [x] Updated UML and PlantUML against the **supplied** SRS including US-14.
 - [x] Distinguish SRS-target behavior from live OpenAPI 0.6.3.
 - [x] Specify hard appointment conflict and overrideable working-hours warning separately.
 - [x] Model owner-only photos, read-only owner appointments and four-step account-persisted tour.
-- [ ] Product Owner corrects duplicate US-07 / absent US-08 and confirms owner calendar access policy.
+- [x] **FR-08** supplied as separate Must Have requirement, with seven functional requirements and eight acceptance criteria; modeled in owner-only Use Case and Sequence 6.
+- [ ] Product Owner integrates FR-08 into main 69-page SRS as §3.8, removes repeated §3.7, and confirms owner calendar access policy.
 - [ ] API owner approves new field names, statuses, notification and onboarding contracts.
 - [ ] Technical team incorporates the SRS-selected Django/MySQL stack in its implementation architecture and approves data lifecycle/consistency design.
 - [ ] Render/compile PlantUML and Mermaid in repository preview; implementation/testing not claimed.
