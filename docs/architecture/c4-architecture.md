@@ -1,7 +1,7 @@
 # Pawthy — C4 Architecture (Sprint 2, 20 November SRS Reconciliation)
 
 > **Owner:** Efe, Software Architect · **Status:** DESIGN PROPOSAL / peer review required · **Date:** 20 November 2026.  
-> **Functional source:** Deniz's 69-page Pawthy Functional Requirements SRS shared on 20 November 2026. Its distinct sections are US-01–US-07 and US-09–US-14; **US-08 is missing and section 3.7 is duplicated**.  
+> **Functional source:** Deniz's 69-page Pawthy Functional Requirements SRS **and the five-page Section 5.2 Software Interfaces supplement** shared on 20 November 2026. Its distinct sections are US-01–US-07 and US-09–US-14; **US-08 is missing and section 3.7 is duplicated**.  
 > **Current published API:** `api/openapi.yaml` v0.6.3 in `HUARGE/Pawthy:develop`. It predates the SRS; design changes below are **not proof of API/implementation changes**. See [alignment](api-srs-alignment.md) and [SRS review](srs-2026-11-20-review.md).
 
 ## 1. System context and confirmed scope
@@ -41,8 +41,8 @@ flowchart TB
   VISITOR["Public Visitor (browser)"]
   subgraph PAWTHY["Pawthy Software System — Logical Containers"]
     WEB["Static Web Frontend<br/>HTML / CSS / vanilla JavaScript<br/>Vet/Owner screens; Guided Tour overlays"]
-    API["Python REST Backend (proposed Django)<br/>RBAC, privacy, scheduling validation,<br/>reminders, notifications and tour state"]
-    DB[("MySQL (proposed)<br/>Owner ID + phone, pets, records, schedules,<br/>reminders, notifications, preferences, tour status")]
+    API["Python / Django REST Backend (SRS-selected)<br/>RBAC, privacy, scheduling validation,<br/>reminders, notifications and tour state"]
+    DB[("MySQL (SRS-selected)<br/>Owner ID + phone, pets, records, schedules,<br/>reminders, notifications, preferences, tour status")]
     MEDIA[("Private Media Storage<br/>Official clinic photo and owner-private gallery")]
   end
   OWNER -->|"HTTPS"| WEB
@@ -56,8 +56,8 @@ flowchart TB
 | Container | Responsibilities | Critical safeguards | Evidence / status |
 |---|---|---|---|
 | Web frontend | Read-only owner availability, veterinarian calendar, health screens, theme, US-14 contextual overlays with Next/Back/Skip and Help replay | UI cannot grant permissions, bypass profile restrictions or treat tutorial replay as account reset | HTML/CSS/JS in team scope; detailed screens implementation-owned |
-| Python REST backend | Owner ID authentication, mandatory password change, role-and-object authorization, calendar calculations, appointment hard conflicts and warnings, diary/vaccine/reminder services, tour persistence, owner notifications | Server-side checks on **every** read and mutation; never expose other owners' records | **Django is preferred/proposed, but framework ADR is unapproved** |
-| MySQL | Stable account IDs separate from mutable phone, birth date accuracy, life stage and chip state, visit/vaccine records, owner diary, schedule and appointment history, notification and onboarding flags | Foreign keys, data integrity, atomic double-booking prevention; exact schema/migrations still unimplemented | Proposed logical persistence |
+| Python REST backend | Owner ID authentication, mandatory password change, role-and-object authorization, calendar calculations, appointment hard conflicts and warnings, diary/vaccine/reminder services, tour persistence, owner notifications | Server-side checks on **every** read and mutation; never expose other owners' records | **Django is selected by the latest SRS (Software Interfaces 5.2.2)**; implementation decisions still require technical review |
+| MySQL | Stable account IDs separate from mutable phone, birth date accuracy, life stage and chip state, visit/vaccine records, owner diary, schedule and appointment history, notification and onboarding flags | Foreign keys, data integrity, atomic double-booking prevention; exact schema/migrations still unimplemented | SRS-selected relational database; physical tables are still proposed |
 | Protected media store | Vet-managed clinic photo, owner-managed personal gallery | Vet is **not** authorized to browse owner's private gallery; URLs must not bypass access checks | Storage technology not finalized |
 
 ## 3. C4 Level 3 — Backend Component View
@@ -70,7 +70,7 @@ flowchart TB
     AUTH["Authentication & Authorization<br/>Owner ID login; password changes; RBAC + object scope"]
     OWNER["Owner & Pet Profile Service<br/>stable Owner ID, phone, life-stage, date accuracy, chip"]
     DIARY["Diary / Symptom History Service<br/>private CRUD; distinct-day frequency"]
-    CLINICAL["Clinical Records Service<br/>vet-only create/update/delete with confirmation"]
+    CLINICAL["Clinical Records Service<br/>vet-only create/update/soft-delete/restore"]
     VACC["Vaccination & Reminder Service<br/>no vaccine deletion; read vs completion state"]
     CAL["Schedule / Appointment Service<br/>weekly hours, exceptions, hard overlap,<br/>soft hours warnings + vet override"]
     AVAIL["Owner Availability Projection<br/>read-only AVAILABLE time windows; privacy-safe"]
@@ -118,7 +118,7 @@ flowchart TB
 | Auth / Owner | `POST /auth/login`, `POST /auth/change-password`, `POST /pet-owners`; `LoginRequest`, `OwnerAccountRequest` | **FR-01.2/01.3/01.9, FR-02.3**: required phone + full name, stable Owner ID distinct from phone, login by ID (current API expects email), phone edit endpoint |
 | Pet Profiles | `/pets`, `/pets/{petId}`, personal and clinical photo routes | **FR-04.9–04.22**: vet-only life stage, exact/estimated birth date, mandatory chip status/conditional chip number; preserve clinic/gallery separation |
 | Diary & History | `/pets/{petId}/observations`, `/observation-statistics` | Distinct `created_at` vs `observed_at`; diary statistics count distinct reported calendar days; missing entries never imply health |
-| Clinical | `/pets/{petId}/medical-records` and `/{recordId}` | **FR-07.9**: vet-authorized confirmed delete; separate vaccine/diary data not cascaded |
+| Clinical | `/pets/{petId}/medical-records` and `/{recordId}` | **FR-07.9**: vet-authorized confirmed **soft deletion and restoration** with independent vaccine/diary records unchanged, per Section 5.2 SI-07 |
 | Vaccination & Reminders | `/pets/{petId}/vaccinations`, `/vaccination-reminders` | SRS `Scheduled/Upcoming/Due/Overdue/Completed/Suppressed`, independent read flag and owner mark-read; vet monitoring includes archived pets; no vaccination delete |
 | Scheduling | `/veterinarian/schedule`, `/availability/blocks`, `/busy-times`, `/appointments` | Hard block overlapping active appointments; **warning + explicit vet override** only for out-of-hours/unavailable time; status Scheduled/Completed/Canceled, time and update notification |
 | Availability Projection | `GET /availability/calendar` public current | **FR-11.10/11.11:** authenticated owner, weekly **available-only**; public-vs-owner decision needed |
@@ -127,7 +127,7 @@ flowchart TB
 
 ### 3.2 Priority security / consistency paths
 
-1. **Registration & first login:** A system-generated **Owner ID is not a phone number**, remains stable across phone edits, and is the login name under the SRS. Store password hashes; present the initial temporary password once to vet for in-person delivery. Prevent access to protected features until first password change is complete.
+1. **Source technology and boundaries (SI-01–SI-07):** The new SRS selects HTML/CSS/JavaScript, Python/Django, MySQL, and OpenAPI/YAML; browser clients never access MySQL directly. Django validates requests, enforces authorization, and protects referential integrity. Clinical record deletion is **soft** and restoration is supported. No external integration is required.\n2. **Registration & first login:** A system-generated **Owner ID is not a phone number**, remains stable across phone edits, and is the login name under the SRS. Store password hashes; present the initial temporary password once to vet for in-person delivery. Prevent access to protected features until first password change is complete.
 2. **Pet identity:** Birth date is recorded as **Exact or Estimated**; life stage is chosen by vet, not algorithmically derived from universal age cutoffs. Only vet edits official identity/clinic photo; owner private gallery is not shared with vet. When status is deceased, clinical history remains, active/future vaccination reminders suppressed.
 3. **Diary privacy:** Owner-only mutations, vet read-only; no synthetic observation on missing days. Observation timestamp separate from creation timestamp. A selected symptom on one calendar day counts once in frequency, even if repeated in entries.
 4. **Appointment integrity:** Each appointment belongs to exactly one owner and one-or-more pets belonging to that owner; minimum duration **10 minutes**. Reject active collisions even on an override. For out-of-hours/unavailable periods, return a warning that requires vet's **explicit consent**, then repeat the conflict check **atomically** before saving; cancellation releases occupancy and keeps history. Reschedule/cancel generates **in-app** owner notice. The exact warning wire protocol is an **API design question**.
@@ -141,7 +141,7 @@ flowchart TB
 | Ref | Decision / evidence | State / responsible owner |
 |---|---|---|
 | D-01 | Frontend HTML/CSS/vanilla JavaScript; no React | Team scope; UI owner decides layout |
-| D-02 | Python REST API; Django preferred over FastAPI | **ADR required**; DevOps draft leaves both open |
+| D-02 | Python / Django REST API and MySQL selected in supplementary SRS §5.2.2 | **Selected in new SRS**; implementation ADR should reconcile older DevOps text |
 | D-03 | MySQL and restricted photo store | Proposed; backend/security owner specifies physical data design |
 | D-04 | Owner-ID login and phone requirement vs API email requirement | **Open — high**, API owner + Deniz |
 | D-05 | Vet override with active overlap prohibition; availability block precedence `/busy-times` vs `/availability/blocks` | **Open — high**, API/backend owner |
@@ -160,7 +160,7 @@ flowchart TB
 - [x] Owner account ID, phone and pet data accuracy target state represented.
 - [x] Strictly distinguish **target SRS** and **existing v0.6.3 API**, do not claim tests passing.
 - [ ] Team/PO resolves source ambiguities and approves versioned API contract changes.
-- [ ] Backend/framework ADR, data constraints and security scheme approved.
+- [ ] SRS stack selection acknowledged; physical schema, data retention and security scheme approved.
 - [ ] GitHub PR peer review and merge confirmed.
 
 **Companion documentation:** [UML diagrams](../uml-diagrams/uml-diagrams.md) · [SRS delta review](srs-2026-11-20-review.md) · [API alignment](api-srs-alignment.md).  
