@@ -1,7 +1,7 @@
 # Pawthy — Architecture / SRS / OpenAPI Alignment (Sprint 2)
 
 > **Architect:** Efe · **Review date:** 20 November 2026 · **Status:** Requirements-to-design cross-check completed; **API contract alignment, implementation and test execution are NOT complete**.  
-> **Requirements evidence:** Deniz's 69-page updated Functional Requirements SRS and five-page supplementary *5.2 Software Interfaces*, both provided 20 Nov 2026. SRS is not committed to the repository in this PR.  
+> **Requirements evidence:** Deniz's 69-page updated Functional Requirements SRS, five-page supplementary *5.2 Software Interfaces* and subsequently supplied **FR-08 View Veterinary Clinical Records** screenshots (slides 31–32/222, Must Have). SRS is not committed to the repository in this PR.  
 > **Technical contract checked:** `HUARGE/Pawthy:develop`, `api/openapi.yaml` OpenAPI **3.1.0 / version 0.6.3**. That published contract still describes some prior Sprint 1 behavior.  
 > **Detailed references:** [Requirement discrepancy ledger](srs-2026-11-20-review.md) · [API owner change proposal](../../api/srs-sync-proposal-2026-11-20.md) · [C4](c4-architecture.md) · [UML](../uml-diagrams/uml-diagrams.md).
 
@@ -11,7 +11,7 @@
 2. Inventory relevant routes and request/response models in version 0.6.3. This is **the published working contract**, not a guarantee of feature implementation.
 3. Update architect-owned C4 and UML for SRS target behavior. Where it conflicts with v0.6.3, mark **CONFLICT**; do not silently change `api/openapi.yaml` or teammate documents.
 4. Keep Product Owner, API author, QA and implementation responsibilities distinct. A recorded gap is not a failed test; a proposed diagram is not a deployment.
-5. **Source correction required:** The new 69-page SRS repeats **3.7/US-07** and omits a separate **3.8/US-08**. Sprint 1 did define read medical records as US-08. UML labels it **provisional from Sprint 1**; no invented new FR-08 or acceptance criteria.
+5. **FR-08 content is now supplied separately:** Seven functional requirements and eight acceptance criteria define owner-only clinical read access, newest-first records, all populated veterinarian-managed fields, no empty optional fields, no owner mutations, soft-deleted exclusion, cross-owner denial and informative empty state. The 69-page SRS PDF **still** repeats §3.7 and lacks §3.8; only consolidation into the canonical PDF remains an editorial request.
 
 **Review states:** DESIGN MAPPED = documented in C4/UML; CONTRACT CONFLICT = existing API lacks or contradicts SRS; OPEN = team must decide; TEST NOT RUN = no execution evidence.
 
@@ -26,7 +26,7 @@
 | US-05 | Owner diary, past observation vs creation time, no future entries | `/observations` endpoints | Diary service, Class A | PARTIAL; validation detail OPEN |
 | US-06 | Distinct symptom **days**, no default healthy days; period filters | `/observation-statistics` | Diary service and data calculations | PARTIAL; aggregation check OPEN |
 | US-07 | Vet clinical CRUD; **soft deletion + restoration** per SI-07; no diary/vaccine cascade | `/medical-records` GET/POST/PATCH; **no DELETE/restore** | Clinical service, Class A | **CONFLICT** |
-| US-08 | No independent SRS story supplied | Sprint 1 owner read-history, current record GET | Provisional US-08 use case | **PO SOURCE BLOCKER** |
+| **FR-08 / US-08** | **Must Have; Pet Owner** with authenticated ownership; own records newest-first, all populated vet fields, omit unpopulated optional fields, no create/edit/delete, soft-deleted hidden until vet restores, empty-state and cross-owner denial (**FR 1–7, AC-01–08**) | **GET `/pets/{petId}/medical-records` already supports PET_OWNER**, `200` says **Most recent first**, `401/403/404` and paginated `MedicalRecordList`; soft-delete exclusion, optional-field display and empty-state are not explicitly verified | Owner-only Use Case, Class A, **Sequence 6** | **PARTIALLY ALIGNED**, remaining data lifecycle/UI tests, **not a missing user story** |
 | US-09 | Vet vaccine creation/update; no vaccination delete | GET/POST/PATCH vaccine operations | Vaccination service, Class A | Broadly compatible; test not run |
 | US-10 | Scheduled/Upcoming/Due/Overdue/Completed/Suppressed reminder plus independent **mark read** | Reminder enum lacks Scheduled/Suppressed; no mark-read | Reminder service, Class A, State B | **CONFLICT** |
 | US-11 | Vet editable day/week exceptions; Owner authenticated **available-only** weekly view and phone | Public `GET /availability/calendar` returns AVAILABLE/BUSY/CLOSED; `/busy-times` and `/availability/blocks` coexist | Calendar component, available-only Sequence | **CONFLICT** |
@@ -34,7 +34,7 @@
 | US-13 | Per-account Light/Dark preference, no clinical data changes | `GET/PATCH /me/theme` | Theme component and use case | DESIGN MAPPED |
 | US-14 | Optional P2 four-step onboarding after first-password change; status saved per account; Help replay never resets | No `guided-tour` route/schema in 0.6.3 | Tour component, Class A, Sequence 5, State C | **NEW CONTRACT GAP** |
 
-**Coverage:** All **14 identifiers in the new target range** are represented in design, with **US-08 explicitly provisional because the supplied updated SRS is missing its section**. Therefore this is **not** a claim of 14/14 verified SRS stories. No API implementation, test pass or formal PO sign-off is claimed.
+**Coverage:** All **14 US identifiers have source-backed functional definitions** when the separate FR-08 screenshots are read alongside the updated SRS. The canonical PDF still needs its duplicate §3.7 replaced with §3.8. This is **design traceability only**, not proof that 14 features are implemented, fully API-aligned, tested or formally approved.
 
 ## 3. Important functional and access-control boundaries
 
@@ -90,7 +90,7 @@ The QA-owned `non-functional-requirements.md`, `quality-measures.md`, and `test-
 
 | Priority | Issue | Assigned review |
 |---|---|---|
-| **Critical** | Fix duplicate US-07 and missing standalone US-08 in 69-page SRS | Deniz (PO) |
+| **Editorial** | FR-08 now received; insert the supplied Must Have content as §3.8 in canonical SRS and remove duplicated §3.7 | Deniz (PO) |
 | **Critical** | Owner ID/phone vs email login/account contract | PO + API/backend |
 | **Critical** | Owner-only available intervals vs public calendar; block precedence | PO + API/backend/security |
 | **Critical** | Appointment override warning handshake, statuses, notices, DB atomicity | PO + API/backend |
@@ -101,11 +101,11 @@ The QA-owned `non-functional-requirements.md`, `quality-measures.md`, and `test-
 | **Medium** | SRS-selected Django/MySQL vs superseded DevOps “Django or FastAPI” text; align documentation | Technical lead/DevOps |
 
 ### Gate status
-- [x] Both newly supplied SRS inputs reviewed against live GitHub v0.6.3.
+- [x] Updated 69-page SRS, Section 5.2 supplement and newly received **FR-08** slides reviewed against GitHub OpenAPI v0.6.3.
 - [x] C4 L1–3, UML Use Case/Class/Sequence/State updated to **target** requirements with conflicts clearly labeled.
 - [x] Separate proposed API changes and detailed issue ledger provided.
 - [x] Team-owned API YAML, SRS, NFR, UI assets, CI/CD plans untouched.
-- [ ] PO resolves gaps and approves final functional scope.
+- [ ] PO incorporates supplied FR-08 into canonical §3.8, fixes repeated §3.7 and confirms remaining open interface policy details.
 - [ ] API owner publishes a revised, validated OpenAPI contract.
 - [ ] Team approves Django/MySQL physical design, soft-delete behavior, permission boundaries and scheduling atomicity.
 - [ ] QA executes acceptance tests; peer reviews and merges PR.
