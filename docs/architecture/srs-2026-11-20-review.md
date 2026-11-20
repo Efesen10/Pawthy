@@ -1,13 +1,13 @@
 # Pawthy Sprint 2 — 20 November 2026 SRS Reconciliation and Decision Ledger
 
 > **Status:** Architecture review complete as a *document comparison*; product/API decisions, implementation, tests and merge are **not** complete.  
-> **Requirements source:** 69-page updated Functional Requirements SRS, five-page Section 5.2 supplement, and **FR-08 View Veterinary Clinical Records** screenshot slides 31–32/222 (Must Have), all supplied in team chat; the 69-page source PDF was not edited by this PR.  
+> **Requirements source:** 69-page updated Functional Requirements SRS, five-page Section 5.2 supplement, and **FR-08 View Veterinary Clinical Records** screenshot screenshots starting on slide 31/222 (Must Have), all supplied in team chat; the 69-page source PDF was not edited by this PR.  
 > **Current contract compared:** [OpenAPI v0.6.3](../../api/openapi.yaml) and Sprint 1 working report on `HUARGE/Pawthy:develop`.  
 > **Author/role:** Efe — Software Architect. Proposed data structures and URLs below are recommendations, not claims about implemented endpoints.
 
 ## 1. Document quality and source precedence
 
-The 69-page SRS has sections 3.1–3.7 and 3.9–3.14. **Section 3.7 (US-07) is duplicated and §3.8 is absent from that PDF.** Subsequently Deniz/the team supplied **FR-08 — View Veterinary Clinical Records**, Primary Actor **Pet Owner**, priority **Must Have**, in screenshot slides 31–32/222. **FR-08 now has known requirements and acceptance criteria**; it should replace the duplicate §3.7 *in the canonical SRS* rather than simply renumbering a copy of US-07.
+The 69-page SRS has sections 3.1–3.7 and 3.9–3.14. **Section 3.7 (US-07) is duplicated and §3.8 is absent from that PDF.** Subsequently Deniz/the team supplied **FR-08 — View Veterinary Clinical Records**, Primary Actor **Pet Owner**, priority **Must Have**, in screenshot screenshots starting on slide 31/222. **FR-08 now has known requirements and acceptance criteria**; it should replace the duplicate §3.7 *in the canonical SRS* rather than simply renumbering a copy of US-07.
 
 US-14 ("First-Time User Guided Tour") is new, **P2/Should Have**, and explicitly *not mandatory for initial Sprint 3 MVP*. It does not retroactively make the pre-SRS 13-story OpenAPI specification a 14-story compliant contract.
 
