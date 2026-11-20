@@ -139,6 +139,8 @@ classDiagram
     +String medications
     +DateTime created_at
     +DateTime updated_at
+    +DateTime deleted_at
+    +String deleted_by
   }
   class VaccinationRecord {
     +String vaccination_id
