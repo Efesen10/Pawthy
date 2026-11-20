@@ -4,7 +4,7 @@
 **Reconciled:** 20 November 2026  
 **Head:** `Efesen10/Pawthy:feature/sprint2-srs-20261120-sync`; **PR target:** `HUARGE/Pawthy:develop`  
 **Live API baseline:** `api/openapi.yaml` — OpenAPI 3.1.0, `info.version: 0.6.3`  
-**New source evidence:** Deniz's 69-page Functional Requirements SRS + 5-page Section 5.2 Software Interfaces supplement + separately supplied **FR-08 Must Have** screenshot slides 31–32/222 (shared externally; not committed as SRS files).  
+**New source evidence:** Deniz's 69-page Functional Requirements SRS + 5-page Section 5.2 Software Interfaces supplement + separately supplied **FR-08 Must Have** screenshot screenshots starting on slide 31/222 (shared externally; not committed as SRS files).  
 **Review state:** Updated architect-owned **design proposal**; API spec remains inconsistent until PO/API owners reconcile, version and QA test. No code has been implemented by these documents.
 
 ## 1. Architect-owned files in this follow-up
