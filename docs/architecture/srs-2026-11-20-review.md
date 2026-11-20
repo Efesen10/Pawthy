@@ -1,13 +1,13 @@
 # Pawthy Sprint 2 — 20 November 2026 SRS Reconciliation and Decision Ledger
 
 > **Status:** Architecture review complete as a *document comparison*; product/API decisions, implementation, tests and merge are **not** complete.  
-> **Requirements source:** 69-page updated Functional Requirements SRS supplied by Deniz in team chat on 20 November 2026 (not committed to GitHub in this PR).  
+> **Requirements source:** 69-page updated Functional Requirements SRS, five-page Section 5.2 supplement, and **FR-08 View Veterinary Clinical Records** screenshot slides 31–32/222 (Must Have), all supplied in team chat; the 69-page source PDF was not edited by this PR.  
 > **Current contract compared:** [OpenAPI v0.6.3](../../api/openapi.yaml) and Sprint 1 working report on `HUARGE/Pawthy:develop`.  
 > **Author/role:** Efe — Software Architect. Proposed data structures and URLs below are recommendations, not claims about implemented endpoints.
 
 ## 1. Document quality and source precedence
 
-The SRS has sections 3.1–3.7 and 3.9–3.14. **Section 3.7 (US-07 Clinical Records Management) is repeated verbatim at the document level; section 3.8 / US-08 is absent.** Sprint 1 had an independent US-08 ("View Medical Records"), so the UML carries a visibly provisional US-08 use case rather than inventing a new FR-08.
+The 69-page SRS has sections 3.1–3.7 and 3.9–3.14. **Section 3.7 (US-07) is duplicated and §3.8 is absent from that PDF.** Subsequently Deniz/the team supplied **FR-08 — View Veterinary Clinical Records**, Primary Actor **Pet Owner**, priority **Must Have**, in screenshot slides 31–32/222. **FR-08 now has known requirements and acceptance criteria**; it should replace the duplicate §3.7 *in the canonical SRS* rather than simply renumbering a copy of US-07.
 
 US-14 ("First-Time User Guided Tour") is new, **P2/Should Have**, and explicitly *not mandatory for initial Sprint 3 MVP*. It does not retroactively make the pre-SRS 13-story OpenAPI specification a 14-story compliant contract.
 
@@ -24,7 +24,7 @@ US-14 ("First-Time User Guided Tour") is new, **P2/Should Have**, and explicitly
 | **05** | FR-05.4/05.12–15: owner observation can be in past, no future, `created_at` distinct from `observed_at`, symptom or written note mandatory, "Normal" exclusive | `Observation` / diary endpoints | **Review A04:** timestamp/validation details need API confirmation |
 | **06** | FR-06.4–06.12: each symptom counted once per *calendar day*; default Last 30 Days, optional 90 Days/All Time; missing day never "healthy" | Statistics endpoint exists | **Review A05:** exact counting and filters need confirmation |
 | **07** | FR-07.3/07.9/07.16 and supplementary **SI-07**: visit date/type mandatory, diagnosis optional; Vet **soft-deletes and restores** clinical records while preserving diary/vaccination data | Current route has GET/POST and record PATCH, **no soft-delete/restore** | **Conflict A06:** lifecycle endpoint, history visibility, audit and retention semantics |
-| **08** | **No US-08 section in supplied SRS**; repeated US-07 instead | Sprint 1 had read medical record history | **Source blocker A07:** PO must correct numbering/content |
+| **08** | Separately supplied **FR-08 — View Veterinary Clinical Records (Must Have)**: owner authenticated and owns selected pet; newest-first; show populated exam, diagnosis, treatment, meds, vet notes; omit blank optional fields; owner read-only; soft-deleted invisible until vet restores; informative empty state; other-owner denied | API GET already includes US-08, PET_OWNER, most-recent-first and access errors; deletion filtering and UI need verifying | **Resolved substantive gap A07:** source content received; **editorial** insertion into canonical PDF still needed |
 | **09** | SRS vaccination: vet entry/edit, no ordinary vaccine deletion | Vaccine GET/POST/PATCH and no DELETE | Broadly consistent in contract; runtime not checked |
 | **10** | SRS reminder states **Scheduled, Upcoming, Due, Overdue, Completed, Suppressed**; separate `is_read`; archive hides from owner's active feed only; deceased suppresses | API enum `UPCOMING,DUE_TODAY,OVERDUE,COMPLETED,DISCONTINUED` and no mark-read operation | **Conflict A08:** status mapping, read state, archive/death behavior |
 | **11** | FR-11.03–18: multiple daily working windows; exceptions; Vet calendar shows available/unavailable/occupied; **authenticated owner** weekly view lists *available intervals only* with clinic phone | `GET /availability/calendar` is `security: []` public and returns `AVAILABLE/BUSY/CLOSED`; `/busy-times` and `/availability/blocks` coexist | **Conflict A09:** public policy, owner projection, exception precedence |
@@ -68,7 +68,7 @@ US-14 ("First-Time User Guided Tour") is new, **P2/Should Have**, and explicitly
 | A04 | Medium | Observation create/observed timestamps, validation for future and Normal field | API/QA |
 | A05 | Medium | Symptom distinct-day aggregation, default time filters | API/QA |
 | A06 | High | Vet-confirmed clinical delete and retention/no-cascade rules | Deniz + Backend |
-| A07 | Critical (source) | **Fix duplicated 3.7 and missing US-08 section**; provide FR/AC text or explicitly retire | Deniz |
+| A07 | Editorial (source) | **FR-08 now supplied (7 functional requirements, 8 acceptance criteria, Must Have)**. Remove duplicate §3.7 and insert FR-08 as §3.8 in the next authoritative SRS | Deniz |
 | A08 | High | Reminder lifecycle status mapping; mark-read independent from completion; archive/deceased filtering | API/Backend |
 | A09 | Critical | Public vs authenticated owner calendar; available-only projection; legacy `/busy-times` precedence | Deniz + API/Security |
 | A10 | Critical | Incompatible appointment status enum; override ACK protocol, concurrent hard conflicts, in-app change/cancel notification | Deniz + API/Backend |
@@ -94,7 +94,7 @@ US-14 ("First-Time User Guided Tour") is new, **P2/Should Have**, and explicitly
 
 - [x] Supplied SRS reviewed and compared to published OpenAPI.
 - [x] Updated architecture and UML models for known new SRS behaviors.
-- [x] Identified new US-14 and missing US-08 editorial issue.
+- [x] Incorporated **FR-08 Must Have** source screenshot, resolved the functional gap, retained canonical §3.7/§3.8 formatting fix as editorial follow-up.
 - [x] Explicit high-risk gaps documented rather than calling current API compliant.
 - [ ] Product Owner corrects source editorial issue and signs off on behavior priorities.
 - [ ] API owner updates/versions OpenAPI; security and backend teams review contracts.
