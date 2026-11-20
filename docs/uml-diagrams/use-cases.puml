@@ -16,7 +16,7 @@ rectangle "Pawthy Pet Health Portal (proposed design)" {
  usecase "US-04 Manage Own Pet Gallery\nand Archive Own View" as UC04O
  usecase "US-05 Record / Edit Own Diary" as UC05
  usecase "US-06 View Diary History\nand Symptom Frequencies" as UC06
- usecase "US-07 Manage Clinical Records" as UC07
+ usecase "US-07 Manage Clinical Records\n(Soft Delete / Restore)" as UC07
  usecase "US-07 Read Own Clinical Records" as UC07O
  usecase "US-08 View Medical Records\n(Sprint 1; missing SRS section)" as UC08
  usecase "US-09 Maintain Vaccination Records" as UC09
