@@ -17,8 +17,7 @@ rectangle "Pawthy Pet Health Portal (proposed design)" {
  usecase "US-05 Record / Edit Own Diary" as UC05
  usecase "US-06 View Diary History\nand Symptom Frequencies" as UC06
  usecase "US-07 Manage Clinical Records\n(Soft Delete / Restore)" as UC07
- usecase "US-07 Read Own Clinical Records" as UC07O
- usecase "US-08 View Medical Records\n(Sprint 1; missing SRS section)" as UC08
+ usecase "FR-08 / US-08 View Own\nVeterinary Clinical Records (Read Only)" as UC08
  usecase "US-09 Maintain Vaccination Records" as UC09
  usecase "US-10 View / Mark Read\nVaccination Reminders" as UC10
  usecase "US-11 Manage Weekly Hours\nand Date Exceptions" as UC11V
@@ -42,9 +41,7 @@ Owner -- UC05
 Owner -- UC06
 Vet -- UC06
 Vet -- UC07
-Owner -- UC07O
 Owner -- UC08
-Vet -- UC08
 Vet -- UC09
 Owner -- UC10
 Vet -- UC10
@@ -85,10 +82,17 @@ note right of UC14
  Replay must not reset stored status.
 end note
 note bottom of UC08
- New 69-page SRS repeats section 3.7 and
- does not contain a separate US-08 section.
- Sprint 1 interpretation retained as provisional
- until Product Owner corrects the SRS.
+ FR-08 is supplied separately in the team's
+ slide screenshots, pages 31-32 / 222;
+ priority MUST HAVE; actor Pet Owner only.
+ Verify owner-to-pet association on server.
+ Show newest first and all populated vet fields;
+ omit optional unpopulated fields.
+ Hide soft-deleted clinical records until
+ veterinarian restores them.
+ No owner create/update/delete controls;
+ show informative empty state when none.
+ 69-page PDF still needs section 3.8 repair.
 end note
 note bottom of UC03
  Cross-cutting SERVER-side authorization,
