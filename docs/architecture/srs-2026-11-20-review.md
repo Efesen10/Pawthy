@@ -82,7 +82,7 @@ US-14 ("First-Time User Guided Tour") is new, **P2/Should Have**, and explicitly
 1. Change phone; generated Owner ID and login continue working; unrelated owner cannot read contact details.
 2. Vet creates pet with estimated birth date; displayed age is marked approximate. Chip Yes with missing chip number must reject. Life stage update must not change birth date or sex.
 3. Owner diary future observation is rejected; frequency counts two entries with same symptom on same day as **one reported day**.
-4. Vet deletes clinical record after confirmation; independent diary and vaccination records still exist. Owner cannot delete it.
+4. Vet soft-deletes a clinical record after confirmation, verifies it is recoverable and can be restored; independent diary and vaccination records still exist. Owner cannot delete it.
 5. Mark an Upcoming reminder read; it remains active. Archive pet hides from owner dashboard but not vet monitoring; deceased suppresses reminders without erasing history.
 6. Vet saves a non-overlapping 15-minute appointment during working hours. Second overlapping appointment must be rejected even with override flag.
 7. Non-overlapping out-of-hours appointment: warning shown; cancel leaves no record; explicit veterinarian confirmation permits save. Adjacent outside-hours intervals stay unavailable.
@@ -102,3 +102,28 @@ US-14 ("First-Time User Guided Tour") is new, **P2/Should Have**, and explicitly
 - [ ] Team merges this architect-only documentation PR after review.
 
 **Companions:** [C4 architecture](c4-architecture.md) · [UML diagrams](../uml-diagrams/uml-diagrams.md) · [API change proposal](../../api/srs-sync-proposal-2026-11-20.md) · [Architecture/API alignment](api-srs-alignment.md).
+
+## 7. Supplementary Section 5.2 Software Interfaces (5-page PDF) — incorporated 20 November
+
+This is a **subsequent SRS source**, not a code implementation report.
+
+| Requirement | Source detail | Architecture/action |
+|---|---|---|
+| **5.2.1** Overview | Browser frontend, backend, relational persistence with a consistent interface contract | C4 Levels 1–3 separate systems at the appropriate view |
+| **5.2.2** Technology Interfaces | **HTML/CSS/JavaScript**, **Python/Django**, **MySQL**, **OpenAPI/YAML** selected | Treat Django/MySQL as **SRS-selected**, not an architect-only proposal; superseded DevOps alternative should be reconciled |
+| **SI-01** API-Based Communication | Frontend ↔ backend HTTP API using JSON where appropriate | Model explicit REST boundary |
+| **SI-02** Request Validation | Backend validates required fields, data formats, ownership and business rules | C4 controllers and domain validation |
+| **SI-03** Authorization Enforcement | Backend enforces authentication and resource-level permissions | Server-side role + object access, not client-only hiding |
+| **SI-04** Consistent API Responses | Structured success/error results suitable for user-facing feedback | OpenAPI response/error schemas; error mapping review needed |
+| **5.2.4** Resource Interfaces | Auth, owners, pets, diary, clinical, vaccination, reminders, schedule, appointments, preferences and guided-tour status | This is **a capability list, not approved URL paths**; API owner must version the actual operations |
+| **SI-05** Database Access | Only backend accesses MySQL; no direct browser DB reads | Keep DB private behind Django service |
+| **SI-06** Referential Integrity | Valid owner/pet/clinical/vaccination/appointment relationships | Transaction and FK constraints in implementation design |
+| **SI-07** Data Lifecycle Operations | **Modification vs soft deletion vs archival vs restoration vs deceased** must remain distinct; historical information preserved | **Corrected the earlier clinical delete assumption:** implement recoverable soft deletion and veterinarian-authorized restoration; no unrelated data cascades |
+| **5.2.6** Integration Boundaries | No external veterinary, booking, Google Calendar, email/SMS, payment or AI providers | Do not add external dependencies to logical architecture |
+| **5.2.7** Contract Consistency | OpenAPI is the frontend/backend contract; finalize after approved requirements changes | **v0.6.3 does not yet meet target SRS**; review before acceptance |
+
+**Review gate:** A prior requirements section saying “delete” does not justify irreversible deletion. The supplementary SRS **explicitly calls for soft deletion and restoration** and should control the lifecycle design. Product Owner should clarify precise retention, who can restore, visibility defaults and audit events. Existing OpenAPI has neither operation.
+
+### Remaining project-source gaps
+
+The supplementary 5.2 refers to **Section 5.1 user interface** and **Section 4.2 data model/integrity**; those sections were **not supplied in this new five-page file**. No assertions about their precise fields, UI mockups or physical database tables can be made based on the 5.2 excerpt alone.
