@@ -1,7 +1,7 @@
 # Pawthy — Architecture / SRS / OpenAPI Alignment (Sprint 2)
 
 > **Architect:** Efe · **Review date:** 20 November 2026 · **Status:** Requirements-to-design cross-check completed; **API contract alignment, implementation and test execution are NOT complete**.  
-> **Requirements evidence:** Deniz's 69-page updated Functional Requirements SRS, five-page supplementary *5.2 Software Interfaces* and subsequently supplied **FR-08 View Veterinary Clinical Records** screenshots (slides 31–32/222, Must Have). SRS is not committed to the repository in this PR.  
+> **Requirements evidence:** Deniz's 69-page updated Functional Requirements SRS, five-page supplementary *5.2 Software Interfaces* and subsequently supplied **FR-08 View Veterinary Clinical Records** screenshots (screenshots starting on slide 31/222, Must Have). SRS is not committed to the repository in this PR.  
 > **Technical contract checked:** `HUARGE/Pawthy:develop`, `api/openapi.yaml` OpenAPI **3.1.0 / version 0.6.3**. That published contract still describes some prior Sprint 1 behavior.  
 > **Detailed references:** [Requirement discrepancy ledger](srs-2026-11-20-review.md) · [API owner change proposal](../../api/srs-sync-proposal-2026-11-20.md) · [C4](c4-architecture.md) · [UML](../uml-diagrams/uml-diagrams.md).
 
