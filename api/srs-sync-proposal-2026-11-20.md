@@ -2,7 +2,7 @@
 
 > **Status: Proposal, not published OpenAPI.** The active `api/openapi.yaml` on `HUARGE/Pawthy:develop` is version **0.6.3**. The architect is **not** changing the team-owned API contract in this PR. Paths, enums and request examples below must be reviewed, versioned and implemented by the API/backend owners.
 >
-> **Evidence:** Deniz's 69-page updated Functional Requirements SRS, plus the five-page supplementary *5.2 Software Interfaces* section supplied 20 November. The latter **selects HTML/CSS/JavaScript + Python/Django + MySQL + OpenAPI/YAML**, states only the backend may access MySQL, and explicitly requires **soft deletion and restoration** of clinical records.
+> **Evidence:** Deniz's 69-page updated Functional Requirements SRS, the five-page supplementary *5.2 Software Interfaces* section, and separately supplied **FR-08 View Veterinary Clinical Records** slides (31–32/222; Must Have). The latter **selects HTML/CSS/JavaScript + Python/Django + MySQL + OpenAPI/YAML**, states only the backend may access MySQL, and explicitly requires **soft deletion and restoration** of clinical records.
 
 ## 1. Contract gap register
 
@@ -17,7 +17,7 @@
 | Owner calendar | `GET /availability/calendar` is public and includes BUSY/CLOSED | Authenticated owner sees only AVAILABLE weekly times + phone; vet gets full private view | Decide versioned owner-specific projection vs changing public route; maintain privacy |
 | Appointments | `CONFIRMED, CANCELLED`; outside-hours blocked; no notice endpoint | `Scheduled, Completed, Canceled`; hard overlap rejection; out-of-hours vet warning/ACK exception; in-app owner reschedule/cancel notices | Version status enum, warning handshake, write transaction and notification contract |
 | Guided tour | No route/schema for US-14 | P2 four-step Pet Owner only; persisted Not Started/Completed/Skipped; Help replay without reset | Propose minimal account-level status read/patch API |
-| Missing US-08 | Sprint 1 separate history story; new 69-page PDF repeats US-07 and omits section 3.8 | PO must correct source and confirm read-history requirements | Keep existing authorized clinical reads; **do not invent missing FR-08** |
+| **FR-08** (separately supplied) | `GET /pets/{petId}/medical-records` already `x-user-stories: [US-07, US-08]`, permits PET_OWNER and responds **Most recent first** | Must Have: authenticated owner sees only own selected pet's non-soft-deleted records newest-first; show **all populated** clinical/veterinarian-note fields, omit blank optional fields, no write controls, cross-owner denial and informative empty state | **Already partially aligned**; explicitly specify soft-delete exclusion and add acceptance tests for field presentation/empty state; canonical 69-page PDF still needs §3.8 insertion |
 
 ## 2. Candidate schema examples (illustrative only, not copy-paste into 0.6.3)
 
@@ -95,7 +95,7 @@ GuidedTourStatus:
 
 ### Candidate data-lifecycle interaction
 
-- Soft-delete clinical visits with stored deletion metadata (e.g., `deleted_at`, `deleted_by`) and vet-only restore, **if backend approves physical fields**. Default owner clinical history should exclude deleted records unless an explicitly authorized history policy says otherwise.
+- Soft-delete clinical visits with stored deletion metadata (e.g., `deleted_at`, `deleted_by`) and vet-only restore, **if backend approves physical fields**. **FR-08 explicitly requires** deleted records to be excluded from the owner's view until veterinarian restoration; only vet-authorized administration may access deleted versions under a separately approved policy.
 - A pet's “archived by owner” flag affects the owner's active list, not clinic data or vet vaccination monitoring.
 - “Deceased” suppresses vaccination reminders while retaining vaccination and clinical history.
 - Vaccination records **must not be exposed via a delete operation** under SRS US-09.
@@ -118,7 +118,8 @@ GuidedTourStatus:
 - [x] SRS changes and technical-interface supplement translated into an API impact plan.
 - [x] API-owned file `api/openapi.yaml` left untouched and still explicitly identified as v0.6.3.
 - [x] Separately model hard overlaps vs vet-confirmed hours warning and soft-delete/restore.
-- [ ] PO fixes absent US-08; confirms status names, calendar audience and reminder read semantics.
+- [x] FR-08 Must Have requirements and AC-01–08 received; GET/read ordering already represented in v0.6.3.
+- [ ] PO inserts FR-08 as §3.8 in canonical 69-page SRS and removes duplicated §3.7; confirms remaining status/calendar policy details.
 - [ ] API owner supplies a versioned, linted OpenAPI spec with response schemas and explicit warning and soft-delete/restore behavior.
 - [ ] Backend/security reviews roles, concurrency, secret handling, database integrity and protected photo access.
 - [ ] QA converts these into API tests and executes them; no tests are claimed to have run.
