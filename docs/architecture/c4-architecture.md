@@ -1,7 +1,7 @@
 # Pawthy — C4 Architecture (Sprint 2, 20 November SRS Reconciliation)
 
 > **Owner:** Efe, Software Architect · **Status:** DESIGN PROPOSAL / peer review required · **Date:** 20 November 2026.  
-> **Functional source:** Deniz's 69-page Pawthy Functional Requirements SRS **and the five-page Section 5.2 Software Interfaces supplement** shared on 20 November 2026. Its distinct sections are US-01–US-07 and US-09–US-14; **US-08 is missing and section 3.7 is duplicated**.  
+> **Functional source:** Deniz's 69-page Pawthy Functional Requirements SRS **and the five-page Section 5.2 Software Interfaces supplement** shared on 20 November 2026. The 69-page PDF **still duplicates §3.7 and omits §3.8**, but a separate team screenshot now supplies **FR-08 — View Veterinary Clinical Records (Must Have)** with seven requirements and eight acceptance criteria.  
 > **Current published API:** `api/openapi.yaml` v0.6.3 in `HUARGE/Pawthy:develop`. It predates the SRS; design changes below are **not proof of API/implementation changes**. See [alignment](api-srs-alignment.md) and [SRS review](srs-2026-11-20-review.md).
 
 ## 1. System context and confirmed scope
@@ -9,7 +9,7 @@
 One veterinary clinic, one authenticated veterinarian/administrator, and multiple authenticated pet owners. A public visitor may access the clinic's public contact information, but the **SRS explicitly grants weekly availability viewing to authenticated owners**; existing v0.6.3 public-calendar exposure requires a policy decision before API modification. There are **two authenticated roles**, not three.
 
 - **Veterinarian:** provision owner accounts with required name and phone, create pet profiles, manage clinical and vaccination data, working schedule, calendar exceptions and manually arranged appointments.
-- **Pet Owner:** first-login password replacement using stable Owner ID, read own official pet/clinical/vaccination data, manage own photo gallery and health diary, view only available clinic times, view own appointments and in-app notifications, choose theme and optionally follow a guided tour.
+- **Pet Owner:** first-login password replacement using stable Owner ID, read own **non-soft-deleted** clinical records newest-first, including all populated vet fields (without editing), plus official pet/vaccination data, manage own photo gallery and health diary, view only available clinic times, view own appointments and in-app notifications, choose theme and optionally follow a guided tour.
 - **External manual contact:** owners contact the clinic via phone/in person to arrange appointments. No online owner booking, payment, SMS/email, external calendar synchronization, automated diagnoses or AI triage.
 - **US-14 guided tour** is P2 / Should Have, not required for the initial Sprint 3 MVP. It is an owner-only UI teaching flow, not a clinical service.
 
@@ -118,7 +118,7 @@ flowchart TB
 | Auth / Owner | `POST /auth/login`, `POST /auth/change-password`, `POST /pet-owners`; `LoginRequest`, `OwnerAccountRequest` | **FR-01.2/01.3/01.9, FR-02.3**: required phone + full name, stable Owner ID distinct from phone, login by ID (current API expects email), phone edit endpoint |
 | Pet Profiles | `/pets`, `/pets/{petId}`, personal and clinical photo routes | **FR-04.9–04.22**: vet-only life stage, exact/estimated birth date, mandatory chip status/conditional chip number; preserve clinic/gallery separation |
 | Diary & History | `/pets/{petId}/observations`, `/observation-statistics` | Distinct `created_at` vs `observed_at`; diary statistics count distinct reported calendar days; missing entries never imply health |
-| Clinical | `/pets/{petId}/medical-records` and `/{recordId}` | **FR-07.9**: vet-authorized confirmed **soft deletion and restoration** with independent vaccine/diary records unchanged, per Section 5.2 SI-07 |
+| Clinical | `GET /pets/{petId}/medical-records` (already supports owner read, most-recent-first); record `POST/PATCH` vet-only | **US-07**: vet-authorized soft deletion and restoration preserving vaccine/diary records. **FR-08 Must Have**: own-pet read-only records newest-first; display all populated clinical/vet-note fields; omit blank optional fields; hide soft-deleted records until vet restoration; render informative empty state; block other-owner access. Current API lacks explicit delete/restore and deleted-record filtering policy. |
 | Vaccination & Reminders | `/pets/{petId}/vaccinations`, `/vaccination-reminders` | SRS `Scheduled/Upcoming/Due/Overdue/Completed/Suppressed`, independent read flag and owner mark-read; vet monitoring includes archived pets; no vaccination delete |
 | Scheduling | `/veterinarian/schedule`, `/availability/blocks`, `/busy-times`, `/appointments` | Hard block overlapping active appointments; **warning + explicit vet override** only for out-of-hours/unavailable time; status Scheduled/Completed/Canceled, time and update notification |
 | Availability Projection | `GET /availability/calendar` public current | **FR-11.10/11.11:** authenticated owner, weekly **available-only**; public-vs-owner decision needed |
@@ -149,12 +149,12 @@ flowchart TB
 | D-06 | SRS available-only authenticated owner calendar vs public busy/closed API | **Open — high**, Product Owner + security/API owner |
 | D-07 | Reminder status and read model; appointment completion/notification wire representation | **Open — high**, API owner |
 | D-08 | US-14 API and account persistence, P2; initial MVP exclusion | API proposal pending, Product Owner to prioritize |
-| D-09 | 69-page SRS duplicated US-07 / absent US-08 | **PO correction requested**; do not invent missing FR-08 |
+| D-09 | 69-page SRS duplicates §3.7 and omits §3.8; **separate FR-08 screenshot now supplied** | **FR-08 requirement content verified**; PO should replace duplicate §3.7 with FR-08 in canonical PDF (editorial, no invented requirements) |
 | D-10 | Concurrent writes and token/session revocation strategy | Design review, not implemented or performance tested |
 
 ## 5. Architectural acceptance criteria (design review only)
 
-- [x] New SRS was directly inspected; contradictions and the missing US-08 explicitly noted.
+- [x] New SRS, the software interfaces supplement and separately supplied **FR-08 Must Have** screenshots inspected; the canonical PDF's duplicated §3.7 still requires an editorial correction.
 - [x] C4 L1 / L2 / L3 include optional guided tour and in-app appointment notifications.
 - [x] Server-side owner scope and private-photo isolation maintained.
 - [x] Vet warning override correctly differs from non-overridable active appointment overlaps.
