@@ -2,7 +2,7 @@
 
 > **Owner:** Software Architect (Efe) · **Reviewed:** 20 November 2026 · **Status:** PROPOSED DESIGN, not implemented or formally approved.  
 > **Source of proposed behaviors:** Deniz's 69-page *Functional Requirements* SRS supplied 20 Nov 2026 (sections 3.1–3.14). **Contract actually published:** `api/openapi.yaml` v0.6.3 on `develop`.  
-> **Important:** The SRS repeats section 3.7 (US-07) and has no separate US-08 section. The Sprint 1 US-08 read-history behavior is represented *provisionally*, pending PO correction. See [SRS review](../architecture/srs-2026-11-20-review.md).
+> **Important:** The 69-page SRS repeats section 3.7 (US-07) and has no separate US-08 section. The supplementary **5.2 Software Interfaces** requires Django/MySQL, backend-only database access, **soft deletion and restoration**. The Sprint 1 US-08 read-history behavior is represented *provisionally*, pending PO correction. See [SRS review](../architecture/srs-2026-11-20-review.md).
 
 ## 1. Diagram index and model status
 
@@ -172,7 +172,7 @@ classDiagram
 - **FR-04.9–04.12/04.19–04.22:** Vet-maintained life stage independent of exact/estimated birth date; required `microchip_status`, conditionally required number; displayed age from recorded date with an approximate marker when estimated. Current API has `estimated_age_months` and lacks explicit birth accuracy, life stage and microchip status — **gap**.
 - **FR-04.13–04.17:** Vet can edit official clinic photo but not owner's private gallery; owner can manage private gallery but not vet's photo. Owner archive is **view-only**, not record deletion. Deceased pets preserve clinical history.
 - **FR-05.4/05.12/05.13, FR-06.4–06.5:** `observed_at` is editable for past events, distinct from immutable `created_at`; future observation rejected; symptom frequency counts **distinct calendar days**, not repeated entries.
-- **FR-07.9/07.16:** Vet may delete clinical records after confirmation but **must not cascade-delete** separately stored diary/vaccinations. SRS excludes permanent ordinary deletion of pet profile/history (US-04); clinical-record deletion semantics require team reconciliation.
+- **FR-07.9/07.16 + supplementary SI-07:** Vet may **soft-delete** clinical records after confirmation and **restore** them; they remain recoverable. Do **not cascade-delete** separately stored diary/vaccinations. `deleted_at`/`deleted_by` are proposed persistence fields, not existing API fields. SRS excludes permanent ordinary deletion of pet profile/history (US-04); Section 5.2 SI-07 confirms that clinical deletion is soft and supports restoration; final restore authorization and audit semantics require API team review.
 - **FR-09.15:** Vaccination records are **not deletable by either role**; vet may update. **FR-10.11:** marking a reminder read never means vaccine completed.
 - `GuidedTourStatus` is `NOT_STARTED | COMPLETED | SKIPPED` (proposed wire spelling). It belongs to the **account**, never device-local storage as the authoritative source. Tour replay retains existing state.
 
@@ -497,7 +497,7 @@ stateDiagram-v2
 | Stable Owner ID separate from phone; phone mandatory; Owner-ID login | Classes A; Sequence 1 | **Mismatch — API change required** |
 | Life stage + exact/estimated DOB + microchip status | Class A | **Mismatch — schema extension** |
 | Official vs personal pet photos | Class A; role links | **Partially represented**, media access still open |
-| Delete clinical record, don't cascade | Class A; access rules | **Gap — no DELETE operation** |
+| **Soft-delete / restore** clinical record, don't cascade (SRS SI-07) | Class A; access rules | **Gap — no DELETE or restore operation** |
 | Vaccination records cannot be deleted | Class A; Sequence 3 | **Matches no-delete intent** |
 | Reminder Scheduled/Due/Suppressed, read status independent | Class A; Sequence 3; State B | **Mismatch** |
 | Owner available-only weekly calendar; not public details | Sequence 4 | **Mismatch** to public time/status API |
@@ -514,7 +514,7 @@ stateDiagram-v2
 - [x] Model owner-only photos, read-only owner appointments and four-step account-persisted tour.
 - [ ] Product Owner corrects duplicate US-07 / absent US-08 and confirms owner calendar access policy.
 - [ ] API owner approves new field names, statuses, notification and onboarding contracts.
-- [ ] Technical team approves Django choice and data consistency design.
+- [ ] Technical team incorporates the SRS-selected Django/MySQL stack in its implementation architecture and approves data lifecycle/consistency design.
 - [ ] Render/compile PlantUML and Mermaid in repository preview; implementation/testing not claimed.
 
 **Related:** [SRS delta and issue ledger](../architecture/srs-2026-11-20-review.md) · [C4](../architecture/c4-architecture.md) · [API alignment](../architecture/api-srs-alignment.md).  
