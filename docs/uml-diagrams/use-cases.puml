@@ -83,7 +83,7 @@ note right of UC14
 end note
 note bottom of UC08
  FR-08 is supplied separately in the team's
- slide screenshots, pages 31-32 / 222;
+ slide screenshots starting at page 31/222;
  priority MUST HAVE; actor Pet Owner only.
  Verify owner-to-pet association on server.
  Show newest first and all populated vet fields;
