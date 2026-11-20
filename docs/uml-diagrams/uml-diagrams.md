@@ -2,7 +2,7 @@
 
 > **Owner:** Software Architect (Efe) · **Reviewed:** 20 November 2026 · **Status:** PROPOSED DESIGN, not implemented or formally approved.  
 > **Source of proposed behaviors:** Deniz's 69-page *Functional Requirements* SRS supplied 20 Nov 2026 (sections 3.1–3.14). **Contract actually published:** `api/openapi.yaml` v0.6.3 on `develop`.  
-> **Important:** The 69-page SRS repeats section 3.7 (US-07) and has no separate US-08 section. The supplementary **5.2 Software Interfaces** requires Django/MySQL, backend-only database access, **soft deletion and restoration**. **FR-08 View Veterinary Clinical Records** has since been supplied in separate team slides (pages 31–32/222, **Must Have**). Owner-only read requirements are now grounded. The 69-page PDF still needs its duplicate section edited and 3.8 inserted. See [SRS review](../architecture/srs-2026-11-20-review.md).
+> **Important:** The 69-page SRS repeats section 3.7 (US-07) and has no separate US-08 section. The supplementary **5.2 Software Interfaces** requires Django/MySQL, backend-only database access, **soft deletion and restoration**. **FR-08 View Veterinary Clinical Records** has since been supplied in separate team slides (screenshots starting on slide 31/222, **Must Have**). Owner-only read requirements are now grounded. The 69-page PDF still needs its duplicate section edited and 3.8 inserted. See [SRS review](../architecture/srs-2026-11-20-review.md).
 
 ## 1. Diagram index and model status
 
@@ -475,7 +475,7 @@ sequenceDiagram
 
 ## 12. Sequence — FR-08 Owner Viewing Veterinary Clinical Records (Must Have)
 
-Source: separately supplied **FR-08 — View Veterinary Clinical Records**, screenshot slides 31–32/222, **Primary Actor: Pet Owner**. Preconditions: authenticated owner, selected pet belongs to that owner's account.
+Source: separately supplied **FR-08 — View Veterinary Clinical Records**, screenshot screenshots starting on slide 31/222, **Primary Actor: Pet Owner**. Preconditions: authenticated owner, selected pet belongs to that owner's account.
 
 ```mermaid
 sequenceDiagram
